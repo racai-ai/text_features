@@ -1,4 +1,6 @@
 import string
+import math
+from collections import Counter
 
 def getPunctuationCount(text):
 
@@ -74,3 +76,41 @@ def getUniqueWordRatio(text):
 
 
 print(getUniqueWordRatio("Hello! How are you doing today? I am fine, thank you."))
+
+
+
+def getYuleK(text):
+
+    #Lower K = more diverse vocabulary, Higher K = more repetition
+    
+    tokens = text.split()
+    words = [token.strip(string.punctuation).lower() for token in tokens if token.strip(string.punctuation)]
+
+    N = len(words) 
+
+    freqs = Counter(words)
+    freq_of_freq = Counter(freqs.values())
+
+    sum_i2Vi = sum(i**2 * Vi for i, Vi in freq_of_freq.items())
+
+    K = 10000 * (sum_i2Vi - N) / (N**2)
+    return K
+
+print(getYuleK("The cat sleeps, the cat runs. The cat eats."))
+
+
+def getMaas(text):
+    
+    #Another type of lexical diversity measure
+
+    tokens = text.split()
+    words = [token.strip(string.punctuation).lower() for token in tokens if token.strip(string.punctuation)]
+
+    N = len(words)     
+    V = len(set(words))  
+
+    Maas = (math.log(N) - math.log(V)) / (math.log(N)**2)
+
+    return Maas
+
+print(getMaas("The cat sleeps, the cat runs. The cat eats."))
