@@ -1,5 +1,6 @@
 import string
 import math
+import statistics
 from collections import Counter
 
 def getPunctuationCount(text):
@@ -114,3 +115,60 @@ def getMaas(text):
     return Maas
 
 print(getMaas("The cat sleeps, the cat runs. The cat eats."))
+
+
+
+
+
+def loadCoRoLaFrequencyList(filepath):
+    freq_dict = {}
+    with open(filepath, "r", encoding="utf-8") as f:
+        for line in f:
+            word, freq = line.strip().split()
+            freq_dict[word] = int(freq)
+    return freq_dict
+
+
+
+
+def getAverageCoRoLaWordFrequency(text, freq_dict):
+    
+    #Words not found in freq_dict are ignored
+    
+    tokens = text.split()
+    words = [token.strip(string.punctuation).lower() for token in tokens if token.strip(string.punctuation)]
+    
+    freqs = [freq_dict[w] for w in words if w in freq_dict]
+    
+    return sum(freqs) / len(freqs)
+
+
+
+
+def getRareWordRatio(text, freq_dict, threshold):
+
+    #Ratio of rare words in the text. A word is considered rare if its frequency in CoRoLa is below 'threshold'.
+    
+    tokens = text.split()
+    words = [token.strip(string.punctuation).lower() for token in tokens if token.strip(string.punctuation)]
+    
+    rare_count = sum(1 for w in words if w in freq_dict and freq_dict[w] < threshold)
+    return rare_count / len(words)
+
+
+
+
+
+freq_dict = loadCoRoLaFrequencyList("src\corola_word_freq_all.tsv")
+print(list(freq_dict.items())[100:110])
+
+
+text = "Azi am mers la mare, nu la munte."
+
+print("Average word frequency:", getAverageCoRoLaWordFrequency(text, freq_dict))
+print("Rare word ratio:", getRareWordRatio(text, freq_dict, threshold=100000))
+
+print(statistics.mean(freq_dict.values()))
+print(statistics.median(freq_dict.values()))
+print(statistics.mode(freq_dict.values()))
+
