@@ -2,6 +2,7 @@ import string
 import math
 import statistics
 from collections import Counter
+import pandas as pd
 
 def getPunctuationCount(text):
 
@@ -14,7 +15,7 @@ def getPunctuationCount(text):
 
     return punctuation_count
 
-print(getPunctuationCount("a.tett,ythth!"))
+#print(getPunctuationCount("a.tett,ythth!"))
 
 
 def getAverageSentenceLength(text):
@@ -34,7 +35,7 @@ def getAverageSentenceLength(text):
     return avg_length
 
 
-print(getAverageSentenceLength("Hello! How are you doing today? I am fine, thank you."))
+#print(getAverageSentenceLength("Hello! How are you doing today? I am fine, thank you."))
 
 
 
@@ -48,7 +49,7 @@ def getNumberOfSentences(text):
     return len(sentences)
 
 
-print(getNumberOfSentences("Hello! How are you doing today? I am fine, thank you."))
+#print(getNumberOfSentences("Hello! How are you doing today? I am fine, thank you."))
 
 
 def getAverageCharactersPerWord(text):
@@ -62,7 +63,7 @@ def getAverageCharactersPerWord(text):
 
     return avg_chars
 
-print(getAverageCharactersPerWord("Testing this function"))
+#print(getAverageCharactersPerWord("Testing this function"))
 
 
 
@@ -76,7 +77,7 @@ def getUniqueWordRatio(text):
     return ratio
 
 
-print(getUniqueWordRatio("Hello! How are you doing today? I am fine, thank you."))
+#print(getUniqueWordRatio("Hello! How are you doing today? I am fine, thank you."))
 
 
 
@@ -97,7 +98,7 @@ def getYuleK(text):
     K = 10000 * (sum_i2Vi - N) / (N**2)
     return K
 
-print(getYuleK("The cat sleeps, the cat runs. The cat eats."))
+#print(getYuleK("The cat sleeps, the cat runs. The cat eats."))
 
 
 def getMaas(text):
@@ -114,7 +115,7 @@ def getMaas(text):
 
     return Maas
 
-print(getMaas("The cat sleeps, the cat runs. The cat eats."))
+#print(getMaas("The cat sleeps, the cat runs. The cat eats."))
 
 
 
@@ -153,22 +154,68 @@ def getRareWordRatio(text, freq_dict, threshold):
     words = [token.strip(string.punctuation).lower() for token in tokens if token.strip(string.punctuation)]
     
     rare_count = sum(1 for w in words if w in freq_dict and freq_dict[w] < threshold)
+
     return rare_count / len(words)
 
 
 
 
 
-freq_dict = loadCoRoLaFrequencyList("src\corola_word_freq_all.tsv")
-print(list(freq_dict.items())[100:110])
+freq_dict = loadCoRoLaFrequencyList("corola_word_freq_all.tsv")
+#print(list(freq_dict.items())[100:110])
 
 
 text = "Azi am mers la mare, nu la munte."
 
-print("Average word frequency:", getAverageCoRoLaWordFrequency(text, freq_dict))
-print("Rare word ratio:", getRareWordRatio(text, freq_dict, threshold=100000))
+#print("Average word frequency:", getAverageCoRoLaWordFrequency(text, freq_dict))
+#print("Rare word ratio:", getRareWordRatio(text, freq_dict, threshold=100000))
 
-print(statistics.mean(freq_dict.values()))
-print(statistics.median(freq_dict.values()))
-print(statistics.mode(freq_dict.values()))
+#print(statistics.mean(freq_dict.values()))
+#print(statistics.median(freq_dict.values()))
+#print(statistics.mode(freq_dict.values()))
+
+
+def fromDatasetToFeatures(file, list_col):
+
+    data = pd.read_csv(file, index_col= 0)
+
+    data = data[list_col]
+
+    content = list(data[list_col[0]])
+
+    features = []
+    x = 0
+
+    for i in content:
+
+        l = []
+        l.append(getPunctuationCount(i))
+        l.append(getAverageSentenceLength(i))
+        l.append(getNumberOfSentences(i))
+        l.append(getAverageCharactersPerWord(i))
+        l.append(getUniqueWordRatio(i))
+        l.append(getYuleK(i))
+        l.append(getMaas(i))
+        l.append(getAverageCoRoLaWordFrequency(i, loadCoRoLaFrequencyList("corola_word_freq_all.tsv")))
+        l.append(getRareWordRatio(i, loadCoRoLaFrequencyList("corola_word_freq_all.tsv"), 100000))
+
+        features.append(l)
+        print(x)
+        x = x + 1
+
+    return features
+
+data = fromDatasetToFeatures('news.csv', ["content","model"])
+
+df_features = pd.DataFrame(data, columns=['PunctuationCount', 'AverageSentenceLength', 'NumberOfSentences','AverageCharactersPerWord','UniqueWordRatio','YuleK','Maas','AverageCoRoLaWordFrequency','RareWordRatio'])
+
+df = pd.read_csv('news.csv', index_col= 0)
+df_features["Model"] = df["model"]
+
+df_features.to_csv("features_dataframe.csv", sep = ",")
+
+#print(df_features)
+
+
+
 
