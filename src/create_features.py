@@ -139,7 +139,7 @@ def getAverageCoRoLaWordFrequency(text, freq_dict):
     tokens = text.split()
     words = [token.strip(string.punctuation).lower() for token in tokens if token.strip(string.punctuation)]
     
-    freqs = [freq_dict[w] for w in words if w in freq_dict]
+    freqs = [freq_dict[w]/1000000 for w in words if w in freq_dict]
     
     return sum(freqs) / len(freqs)
 
