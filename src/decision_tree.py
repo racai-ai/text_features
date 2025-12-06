@@ -19,7 +19,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 
 
-tree = DecisionTreeClassifier(random_state=42)
+tree = DecisionTreeClassifier()
 tree.fit(X_train, y_train)
 y_pred_tree = tree.predict(X_test)
 print("Decision Tree Accuracy:", accuracy_score(y_test, y_pred_tree))

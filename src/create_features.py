@@ -4,6 +4,7 @@ import statistics
 from collections import Counter
 import pandas as pd
 
+
 def getPunctuationCount(text):
 
     punctuation_set = set(string.punctuation)
@@ -175,13 +176,76 @@ text = "Azi am mers la mare, nu la munte."
 #print(statistics.mode(freq_dict.values()))
 
 
-def fromDatasetToFeatures(file, list_col):
+
+def getWordNgramEntropy(text, n):
+
+    #Entropy of n_grams of size 2
+
+    tokens = text.lower().translate(str.maketrans('', '', string.punctuation)).split()
+    
+    if len(tokens) < n:
+        return 0
+
+    ngrams = [tuple(tokens[i:i+n]) for i in range(len(tokens) - n + 1)]
+
+    counts = Counter(ngrams)
+    total = sum(counts.values())
+  
+    probs = [count / total for count in counts.values()]
+   
+    entropy = -sum(p * math.log(p, 2) for p in probs)
+
+    return entropy
+
+
+
+def getCharacterNgramPerplexity(text, n):
+
+    #Perplexity of character-level n_grams of size 3
+    
+    cleaned = text.lower().translate(str.maketrans('', '', string.whitespace))
+
+    ngrams = [cleaned[i:i+n] for i in range(len(cleaned) - n + 1)]
+    counts = Counter(ngrams)
+    total = sum(counts.values())
+
+    probs = [c / total for c in counts.values()]
+
+    perplexity = 2 ** (-sum(p * math.log(p, 2) for p in probs))
+
+    return perplexity
+
+
+
+#print(getWordNgramEntropy(text, n=2)) 
+
+#print(getCharacterNgramPerplexity(text, n=3))
+
+
+def getUppercaseRatio(text):
+ 
+    total_chars = len(text)
+    uppercase_chars = sum(1 for c in text if c.isupper())
+
+    return uppercase_chars / total_chars
+
+
+def getVowelRatio(text):
+   
+    vowels = "aăâeiîouAĂÂEIÎOU"
+    total_chars = len(text)
+
+    vowel_count = sum(1 for c in text if c in vowels)
+
+    return vowel_count / total_chars
+
+
+
+def fromDatasetToFeatures(file, name_col):
 
     data = pd.read_csv(file, index_col= 0)
 
-    data = data[list_col]
-
-    content = list(data[list_col[0]])
+    content = list(data[name_col])
 
     features = []
     x = 0
@@ -198,16 +262,21 @@ def fromDatasetToFeatures(file, list_col):
         l.append(getMaas(i))
         l.append(getAverageCoRoLaWordFrequency(i, loadCoRoLaFrequencyList("corola_word_freq_all.tsv")))
         l.append(getRareWordRatio(i, loadCoRoLaFrequencyList("corola_word_freq_all.tsv"), 100000))
+        l.append(getWordNgramEntropy(i, 2))
+        l.append(getCharacterNgramPerplexity(i, 3))
+        l.append(getUppercaseRatio(i))
+        l.append(getVowelRatio(i))
 
         features.append(l)
+        
         print(x)
         x = x + 1
 
     return features
 
-data = fromDatasetToFeatures('news.csv', ["content","model"])
+data = fromDatasetToFeatures('news.csv', "content")
 
-df_features = pd.DataFrame(data, columns=['PunctuationCount', 'AverageSentenceLength', 'NumberOfSentences','AverageCharactersPerWord','UniqueWordRatio','YuleK','Maas','AverageCoRoLaWordFrequency','RareWordRatio'])
+df_features = pd.DataFrame(data, columns=['PunctuationCount', 'AverageSentenceLength', 'NumberOfSentences','AverageCharactersPerWord','UniqueWordRatio','YuleK','Maas','AverageCoRoLaWordFrequency','RareWordRatio','WordNgramEntropy','CharacterNgramPerplexity','UppercaseRatio','VowelRatio'])
 
 df = pd.read_csv('news.csv', index_col= 0)
 df_features["Model"] = df["model"]
